@@ -1,0 +1,218 @@
+
+The following lab was done on MacOS Catalina Version 10.15.1
+I did the lab with Connor Chin (UID: 605111090; Lab 2)
+______________________________________________________________________
+
+Step 1
+
+We connect the BeagleBone to the laptop
+
+________________________________________________________________________
+
+Step 2
+
+Find the BeagleBone in Finder as an external storage device and open it.
+
+_______________________________________________________________________
+
+Step 3
+
+We then open the file START.htm
+
+On the left margin of the opened webpage we see a summary of the steps. \
+The webpage shows that the first step: Plug in BeagleBone via USB has been\
+completed.
+
+We then complete the second step. For this we need to install the \
+required drivers. Since the given drivers do not support MacOS Catalina,\
+we use the modified installer from:
+https://github.com/jwise/HoRNDIS/issues/102#issuecomment-541237232
+The modified package is:
+https://github.com/jwise/HoRNDIS/files/3719733/HoRNDIS-9.2-catalina_install.pkg.zip
+
+Once we install the drivers, we restart the computer.
+
+The webpage now shows that step 2: Install drivers has been completed.
+
+_________________________________________________________________________
+
+Step 4
+
+Now we open terminal and use the following command:
+sudo ssh root@192.168.7.2
+The default password should be empty. However, due to some reason it was\
+the password of my Mac user login.
+
+__________________________________________________________________________
+
+Step 5
+
+To connect the BeagleBone to the Wifi we start the connmanctl terminal with\
+the following command:
+     connmanctl
+To turn on wifi we use the following command:
+     enable wifi
+Then we scan all accessible wifi access points:
+     scan wifi
+We then list all the discovered access points:
+     services
+We find the CR3760-wifi. Then we register as a prospective client:
+     agent on
+To connect to the CR3760-wifi we use the string from the access points lists\
+     connect wifi_2cf7f1067f89_4352333736302d77696669_managed_psk
+When asked for a passphrase, we enter
+     3760ClassNet
+Since we are connected we can quit connmanctl:
+     quit
+
+_________________________________________________________________________
+
+Step 6
+
+To find the IP address of the BeagleBone we run the following command:
+   ifconfig
+
+This gives the following output
+
+SoftAp0   Link encap:Ethernet  HWaddr 34:03:de:5d:9c:e3  
+          inet addr:192.168.8.1  Bcast:192.168.8.255  Mask:255.255.255.0
+          inet6 addr: fe80::3603:deff:fe5d:9ce3/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:86 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 B)  TX bytes:22450 (21.9 KiB)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:1313 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1313 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1 
+          RX bytes:109891 (107.3 KiB)  TX bytes:109891 (107.3 KiB)
+
+usb0      Link encap:Ethernet  HWaddr 34:03:de:5d:9c:e0  
+          inet addr:192.168.7.2  Bcast:192.168.7.255  Mask:255.255.255.0
+          inet6 addr: fe80::3603:deff:fe5d:9ce0/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:2351 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1664 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:307243 (300.0 KiB)  TX bytes:365273 (356.7 KiB)
+
+wlan0     Link encap:Ethernet  HWaddr 2c:f7:f1:06:7f:89  
+          inet addr:10.97.85.13  Bcast:10.97.85.255  Mask:255.255.255.0
+          inet6 addr: fe80::2ef7:f1ff:fe06:7f89/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST DYNAMIC  MTU:1500  Metric:1
+          RX packets:64 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:101 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:14432 (14.0 KiB)  TX bytes:20850 (20.3 KiB)
+
+
+The IP address is located under the network interface "wlan0" and \
+labeled as "inet addr"
+Here it is: 10.97.85.13
+
+This is the address my partner used to log in.
+_______________________________________________________________________
+
+Step 7
+
+To update the database of apt-get:
+   sudo apt-get update
+
+We check the /etc/ssh/ssh_config and /etc/ssh/sshd_config files to enable\
+X11 forwarding if it is disabled.
+
+We also install xauth and xvfb for X11 forwarding support for future SSH \
+connections to the BeagleBone
+    sudo apt-get install xauth
+    sudo apt-get install xvfb	
+
+If this does not install, change the wifi since it might be due to poor\
+connectivity.
+
+________________________________________________________________________
+
+Step 8
+
+Now we set up the beaglebone as a server.
+
+To generate the key, we use the following command:
+   ssh-keygen
+
+This gives the following output
+       Generating public/private rsa key pair.
+       Enter file in which to save the key (/root/.ssh/id_rsa): 
+       Enter passphrase (empty for no passphrase): 
+       Enter same passphrase again: 
+       Your identification has been saved in /root/.ssh/id_rsa.
+       Your public key has been saved in /root/.ssh/id_rsa.pub.
+       The key fingerprint is:
+       00:47:46:b7:de:cc:af:7f:f0:04:96:be:45:76:89:6e root@beaglebone
+       The key's randomart image is:
+       +---[RSA 2048]----+
+       |    .o= .        |
+       |     + . .       |
+       |      . .    .. .|
+       |       o +  +.o..|
+       |        S +o.+ . |
+       |           .oEo  |
+       |            o*   |
+       |           .. o  |
+       |          ....   |
+       +-----------------+
+
+
+To create an account for the client
+   sudo useradd -d /home/home1 -m raji
+
+Then we create a password by
+     sudo passwd raji
+
+Then we enter the password and confirm it.
+
+Finally, we create a .ssh directory for the client
+    cd home/home1
+    sudo mkdir .ssh
+
+To allow the clinet to use it we change the permission on the directory
+   sudo chown -R raji .ssh
+   sudo chmod 700 .ssh
+
+That was all the steps for the server
+_________________________________________________________________________
+
+Step 9
+
+To set it up as a client, we did the following steps
+
+First I copied my public key to the server for authenication
+      ssh-copy-id nikkil@10.97.85.204
+
+Then to add the private key to the authentication agent
+     eval $(ssh-agent)
+     ssh-add
+
+Then we ssh into the server
+     ssh nikil@10.97.85.204
+
+This gave us access. To check the connection, create a file and check if \
+it is visible to the other person.
+
+__________________________________________________________________________
+
+Step 10
+
+To ssh with X-11 forwarding, I opened a terminal in Quartz and used the\
+following command to login
+	  ssh nikil@10.97.85.204
+
+Then I ran firefox with the following command
+     firefox
+
+The browser successfully came up.
+
+____________________________________________________________________________

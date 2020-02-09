@@ -1,0 +1,7 @@
+
+
+cat /dev/stdin | sed 's/<u>//g' | sed 's/<\/u>//g' | sed 's/?//g' |\
+sed "s/\`/\'/g" | tr '[:upper:]' '[:lower:]' |\
+grep "^[ ]*<td[^\>]*>[ pkmnwlhaeiou']*<\/td>[ ]*$" |\
+sed 's/^[ ]*<td[^\>]*>//' | sed 's/<\/td>[ ]*$//' |\
+tr ' ' '\n' | sort -u 

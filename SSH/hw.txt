@@ -1,0 +1,49 @@
+HW 8
+
+______________________________________________________________________
+
+Question 1
+
+Yes, the network is still secure even if some other team is observing all the \
+bytes going back and forth. The data they would get would be encrypted and it\
+would not be possible to decrypt it without the required private key. So the\
+network would still be safe.
+
+1) Yes, the network is still secure. This is due to the fact that we already setup\
+   key-based authenication using ssh-agent which does not require us to enter \
+   our passphrase again. As a result we will not be entering our passphrase\
+   after our intial client and server setup is completed. So, the network is\
+   still secure, since other people do not have access to the private key\
+   (and cannot decrypt it since they do not have the passphrase either).
+
+   However, if they had my passphrase, they might be able to decrypt my private key\
+   and use it. Luckily, they do not have the passphrase.
+
+   Since they would have access to information regarding what we typed\
+   it would give let them know what we were sending across. Using this information\
+   and the encrypted code, they might be able to figure out the hash function.\
+   However, that is far-fetched.
+
+2) No, the network would not be secure. this is due to the fact that the other team\
+   would have access to the the private and public keys and would easily be able\
+   to decrypt the data from that point onwards.
+
+________________________________________________________________________
+
+Question 2
+
+When we verify the signature we get the following output gpg:
+     Signature made Mon 25 Nov 2019 09:16:03 PM PST using RSA key ID D50149F1
+     gpg: Good signature from "preksha <prekshaupatel@gmail.com>"
+     gpg: WARNING: This key is not certified with a trusted signature!
+     gpg:          There is no indication that the signature belongs to the owner.
+     Primary key fingerprint: C1F4 183E C6DA D732 4CC6  E2A9 193B 2014 D501 49F1
+
+gpg2 --verify command compares the signature by decryting it with the public key.\
+This verifies that the signature was encrypted with the corresponding private key.\
+However, it does not verify whether the public key actually belongs to me. This\
+would be neccessary to verify the signature.
+
+This problem can be solved by proving the ownership of the public key using\
+digital certificates. A third party can keep track of who the public key\
+belongs to.

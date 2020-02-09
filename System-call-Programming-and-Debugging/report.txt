@@ -1,0 +1,419 @@
+
+LAB 5
+______________________________________________________________________
+
+STEP 1
+
+Write tr2b.c using getchar() and putchar(ch) to transliterate bytes.
+
+_______________________________________________________________________
+
+STEP 2
+
+Write tr2u.c using read() and write() to transliterate bytes.
+
+_______________________________________________________________________
+
+STEP 3
+
+Create a file of size 5000000 bytes. The following command can be used:
+       head --bytes=5000000 /dev/urandom > testfile.txt
+
+After creating a file, use strace to compare the system calls issued.
+
+A) COPYING ONE FILE TO ANOTHER
+
+    tr2b
+   
+	strace -c ./tr2b 'abc' 'xyz' < testfile.txt > report.txt
+	% time     seconds  usecs/call     calls    errors syscall
+	------ ----------- ----------- --------- --------- ----------------
+	 74.04    0.016492          27       611           write
+	 25.96    0.005783           9       613           read
+	  0.00    0.000000           0         2           open
+	  0.00    0.000000           0         2           close
+	  0.00    0.000000           0         4           fstat
+	  0.00    0.000000           0         9           mmap
+	  0.00    0.000000           0         4           mprotect
+	  0.00    0.000000           0         1           munmap
+	  0.00    0.000000           0         1           brk
+	  0.00    0.000000           0         1         1 access
+	  0.00    0.000000           0         1           execve
+	  0.00    0.000000           0         1           arch_prctl
+	------ ----------- ----------- --------- --------- ----------------
+	100.00    0.022275                  1250         1 total
+
+	tr2b makes 611 write calls and 613 read calls when writing to another file. 
+
+    tr2u
+
+	strace -c ./tr2u 'abc' 'xyz' < testfile.txt > report.txt
+	% time     seconds  usecs/call     calls    errors syscall
+	------ ----------- ----------- --------- --------- ----------------
+	 57.18   36.256974           7   5000000           write
+	 42.82   27.148759           5   5000002           read
+	  0.00    0.000051           7         7           mmap
+	  0.00    0.000038          10         4           mprotect
+	  0.00    0.000019          10         2           open
+	  0.00    0.000017          17         1           munmap
+	  0.00    0.000014           7         2           close
+	  0.00    0.000009           9         1         1 access
+	  0.00    0.000007           4         2           fstat
+	  0.00    0.000005           5         1           execve
+	  0.00    0.000004           4         1           brk
+	  0.00    0.000003           3         1           arch_prctl
+	------ ----------- ----------- --------- --------- ----------------
+	100.00   63.405900              10000024         1 total
+
+	tr2u makes 5000000 write calls and 5000002 read calls. Since tr2u makes a\
+	system call for each read and write, this explains why it has way more \
+	system calls as compared to tr2b.
+
+
+
+B) COPYING FILE TO TERMINAL
+
+    tr2b
+    
+       strace -c ./tr2b 'abc' 'xyz' < testfile.txt
+       % time     seconds  usecs/call     calls    errors syscall
+       ------ ----------- ----------- --------- --------- ----------------
+	97.75    0.090994           5     20166           write
+	 2.07    0.001925           3       613           read
+	 0.05    0.000051           6         9           mmap
+	 0.05    0.000044          11         4           mprotect
+	 0.02    0.000019           5         4           fstat
+	 0.02    0.000015           8         2           open
+	 0.01    0.000012          12         1           munmap
+	 0.01    0.000008           8         1           execve
+	 0.01    0.000007           4         2           close
+	 0.01    0.000007           7         1         1 access
+	 0.00    0.000004           4         1           brk
+	 0.00    0.000004           4         1           arch_prctl
+       ------ ----------- ----------- --------- --------- ----------------
+       100.00    0.093090                 20805         1 total
+
+       tr2b makes 20166 write calls and 613 read calls. The number of read calls \
+       is the same whether the output is in the file or on the terminal. However, \
+       a lot more write calls are there.
+
+    tr2u
+
+       strace -c ./tr2u 'abc' 'xyz' < testfile.txt
+       % time     seconds  usecs/call     calls    errors syscall
+       ------ ----------- ----------- --------- --------- ----------------
+	55.30   25.983124           5   5000000           write
+	44.70   21.006728           4   5000002           read
+	 0.00    0.000000           0         2           open
+	 0.00    0.000000           0         2           close
+	 0.00    0.000000           0         2           fstat
+	 0.00    0.000000           0         7           mmap
+	 0.00    0.000000           0         4           mprotect
+	 0.00    0.000000           0         1           munmap
+	 0.00    0.000000           0         1           brk
+	 0.00    0.000000           0         1         1 access
+	 0.00    0.000000           0         1           execve
+	 0.00    0.000000           0         1           arch_prctl
+       ------ ----------- ----------- --------- --------- ----------------
+       100.00   46.989852              10000024         1 total
+
+       tr2u makes 5000000 write calls and 5000002 read calls. The total number of \
+       read and write calls is the same irrespective of wether the output is to a \
+       file or to the terminal since we write for each character. The number of \
+       calls are less than tr2b.
+
+
+______________________________________________________________________________
+
+STEP 4
+
+Using the time command to measure how much faster one program is. Running the \
+following commands with the same 5000000 bytes file.
+
+A) COPYING ONE FILE TO ANOTHER
+
+    tr2b
+
+      time ./tr2b 'abc' 'xyz' < testfile.txt > report.txt
+
+      real	0m0.188s
+      user	0m0.125s
+      sys	0m0.012s
+      
+
+    tr2u
+    
+      time ./tr2u 'abc' 'xyz' < testfile.txt > report.txt
+
+      real	0m13.706s
+      user	0m3.587s
+      sys	0m9.854s
+
+
+
+B) COPYING FILE TO TERMINAL
+
+    tr2b
+
+      time ./tr2b 'abc' 'xyz' < testfile.txt
+
+      real	0m1.189s
+      user	0m0.226s
+      sys	0m0.260s
+
+
+    tr2u
+
+      time ./tr2u 'abc' 'xyz' < testfile.txt
+
+      real	0m12.572s
+      user	0m3.156s
+      sys	0m9.326s
+
+      As observed, tr2b is way faster than tr2u (about 10 times faster). This to be\
+      expected since tr2u makes way more system calls and consequentially is slower.
+
+__________________________________________________________________________
+
+
+HW 5
+___________________________________________________________________
+
+STEP 1
+
+To create files of size 0, 100, 10000, 1000000 use the following commands: 
+
+head -0 /dev/urandom > out0
+head -100 /dev/urandom > out100
+head -10000 /dev/urandom > out10000
+head -1000000 /dev/urandom > out1000000
+
+____________________________________________________________________
+
+STEP 2
+
+Compare the time required by the function:
+
+For sfrob, the time take by the files of different sizes is:
+
+      time ./sfrob < out0 > sorted.txt
+
+      real	0m0.003s
+      user	0m0.000s
+      sys	0m0.002s
+      Function was called  0 times.
+
+
+      time ./sfrob < out100 > sorted.txt
+
+      real	0m0.005s
+      user	0m0.003s
+      sys	0m0.001s
+      Function was called  606 times.
+
+
+      time ./sfrob < out10000 > sorted.txt
+
+      real	0m0.182s
+      user	0m0.153s
+      sys	0m0.006s
+      Function was called  122239 times.
+
+
+      time ./sfrob < out1000000 > sorted.txt
+
+      real	0m16.292s
+      user	0m13.601s
+      sys	0m0.733s
+      Function was called  18715813 times.
+
+
+
+
+
+For sfrobu the time taken by the files of different sizes are:
+
+      time ./sfrobu < out0 > sorted.txt
+
+      real	0m0.004s
+      user	0m0.002s
+      sys	0m0.000s
+      Function was called  0 times.
+
+
+      time ./sfrobu < out100 > sorted.txt
+
+      real	0m0.045s
+      user	0m0.006s
+      sys	0m0.036s
+      Function was called  606 times.
+
+
+      time ./sfrobu < out10000 > sorted.txt
+
+      real	0m3.792s
+      user	0m0.859s
+      sys	0m2.909s
+      Function was called  122239 times.
+
+
+      time ./sfrobu < out1000000 > sorted.txt
+
+      real	7m22.542s
+      user	1m31.217s
+      sys	5m48.881s
+      Function was called  18715813 times.
+
+
+
+
+For sfrobu -f the time taken by files of different sizes are:
+
+      time ./sfrobu -f < out0 > sorted.txt
+
+      real	0m0.006s
+      user	0m0.001s
+      sys	0m0.001s
+      Function was called  0 times.
+
+
+      time ./sfrobu -f < out100 > sorted.txt
+
+      real	0m0.045s
+      user	0m0.011s
+      sys	0m0.031s
+      Function was called  604 times.
+
+
+      time ./sfrobu -f < out10000 > sorted.txt
+
+      real	0m3.727s
+      user	0m0.835s
+      sys	0m2.855s
+      Function was called  122229 times.
+
+
+      time ./sfrobu -f < out1000000 > sorted.txt
+
+      real	6m19.776s
+      user	1m26.832s
+      sys	4m50.592s
+      Function was called  18715886 times.
+
+
+
+CALLS TO FROBCMP
+The number of function calls to frobcmp are the same for sfrob and sfrobu.
+However, sfrob -f has less or equal number of calls compared to sfrob and sfrobu.
+If n is the number of lines in the file then 3*n*log(n) is approximately the \
+number of times the function frobcmp is called.
+
+
+TIME TAKEN
+The time shows that sfrobu and sfrobu -f is much slower than sfrob. sfrobu and \
+sfrob -f take longer than sfrob since they use system calls for read and every \
+write.
+
+Since time also depends on the number of function calls and system calls,\
+the order of the function would be n + n*log(n). Hence O(n)=n*log(n).
+
+We also observe that sys takes most of the time in sfrobu, while user takes most\
+time in sfrob. This makes sense since sfrobu makes more system calls than sfrob. 
+
+
+______________________________________________________________________
+
+STEP 3
+
+Using strace,
+
+strace -c ./sfrob < out1000000 > result
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 70.20    0.061087           2     31291           write
+ 21.75    0.018925           1     31294           read
+  4.35    0.003788           0      9238           brk
+  2.47    0.002151         538         4           munmap
+  1.11    0.000964           1      1925           mremap
+  0.11    0.000097          19         5           fstat
+  0.01    0.000007           1        12           mmap
+  0.00    0.000000           0         3           open
+  0.00    0.000000           0         3           close
+  0.00    0.000000           0         4           mprotect
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.087019                 73782         1 total
+
+
+strace -c ./sfrobu < out1000000 > result
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 99.98 1252.764883           5 236054798           write
+  0.02    0.195560       65187         3           read
+  0.00    0.000786         262         3           munmap
+  0.00    0.000606           0      1924           mremap
+  0.00    0.000072           7        11           mmap
+  0.00    0.000034           9         4           mprotect
+  0.00    0.000027           5         5           fstat
+  0.00    0.000021           5         4           brk
+  0.00    0.000017           6         3           open
+  0.00    0.000008           3         3           close
+  0.00    0.000007           7         1         1 access
+  0.00    0.000007           7         1           execve
+  0.00    0.000004           4         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00 1252.962032             236056761         1 total
+
+(The strace for the second call was terminated after a long time.
+While it finished the write calls, it might not have completed free())
+
+
+
+We observe that the system calls that could potentially be malloc, realloc\
+and free:
+mmap()
+brk()
+munmap()
+mremap()
+
+Since we are not sure about which calls correspond to malloc(), we can man the\
+rest of the function.
+
+
+man mmap
+
+    mmap(NULL, 168090, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20a5e9c000
+
+This tells us that mmap() is a function that takes the following arguments:
+void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+
+The system call creates a new mapping in the virtual address space of the \
+calling process. The contents are initialized using length bytes from the offset\
+in the file. prot is the type of protection for the file, flags set it to\
+private or shared.
+
+man brk
+
+    brk(0x937000)        = 0x937000
+
+This tells us that brk() changes the location of the program break (which \
+defines the end of the process's data segment. This could be used to allocate\
+more or less memory by changing the address of the end of the memory location. This\
+could work as a realloc.
+
+man munmap
+
+    munmap(0x7f0536b99000, 168090) = 0
+
+This system call deletes the mappings for the specified addresses range.
+This could be used instead of free().
+
+man mremap
+
+This system call expands or shrinks a memory address potentially moving it at the\
+same time. Its inputs include old address, old size, new size. This can be used to\
+realloc memory and move the address if there is not enough space.
+
+_________________________________________________________________________

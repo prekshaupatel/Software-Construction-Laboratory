@@ -1,0 +1,424 @@
+LAB 7
+______________________________________________________________________
+
+Step 1
+
+To get a copy of the repository
+   git clone ~eggert/src/gnu/diffutils
+
+______________________________________________________________________
+
+Step 2
+
+To get a log of changes, we first enter the directory
+   cd diffutils
+
+Then we get the log and save it to git-log.txt
+     git log > ../git-log.txt
+
+_______________________________________________________________________
+
+Step 3
+
+Then we generate a list of tags and save it to git-tags.txt
+     git tag > ../git-tags.txt
+
+_______________________________________________________________________
+
+Step 4
+
+We first find the commit
+
+commit 62ca21c8c1a5aa3488589dcb191a4ef04ae9ed4f
+Author: Paul Eggert <eggert@cs.ucla.edu>
+Date:   Wed Jan 25 23:46:16 2012 -0800
+
+    maint: quote 'like this' or "like this", not `like this'
+
+
+Using the hash value we can create a patch for that commit
+      git show 62ca21c8c1a5aa3488589dcb191a4ef04ae9ed4f > ../quote-patch.txt
+
+_______________________________________________________________________
+
+Step 5
+
+We checkout version 3.0
+   git checkout tags/v3.0 -b lab
+________________________________________________________________________
+
+Step 6
+
+To apply the patch
+   patch -p1 < ../quote-patch.txt
+
+The problems encountered include:
+      patching file README
+      Hunk #1 FAILED at 9.
+      Hunk #3 FAILED at 60.
+      2 out of 3 hunks FAILED -- saving rejects to file README.rej
+      patching file README-hacking
+      Hunk #1 FAILED at 19.
+      1 out of 1 hunk FAILED -- saving rejects to file README-hacking.rej
+      patching file cfg.mk
+      Hunk #1 FAILED at 29.
+      1 out of 1 hunk FAILED -- saving rejects to file cfg.mk.rej
+      patching file src/diff.c
+      Hunk #10 FAILED at 876.
+      Hunk #11 FAILED at 906.
+      Hunk #12 FAILED at 942.
+      3 out of 14 hunks FAILED -- saving rejects to file src/diff.c.rej
+      patching file src/diff3.c
+      Hunk #6 FAILED at 433.
+      1 out of 9 hunks FAILED -- saving rejects to file src/diff3.c.rej
+
+The file to patch was not found 3 times. As per the instructions I skipped those patches.
+
+___________________________________________________________________________
+
+Step 7
+
+To get an overview of what happened, we use the following command: git status
+     On branch lab
+     Changes not staged for commit:
+       (use "git add <file>..." to update what will be committed)
+       (use "git checkout -- <file>..." to discard changes in working directory)
+
+	     modified:   NEWS
+	     modified:   README
+	     modified:   TODO
+	     modified:   doc/diagmeet.note
+	     modified:   ms/config.bat
+	     modified:   ms/config.site
+	     modified:   po/en.po
+	     modified:   src/analyze.c
+	     modified:   src/cmp.c
+	     modified:   src/context.c
+	     modified:   src/diff.c
+	     modified:   src/diff.h
+	     modified:   src/diff3.c
+	     modified:   src/dir.c
+	     modified:   src/ifdef.c
+	     modified:   src/io.c
+	     modified:   src/sdiff.c
+	     modified:   src/side.c
+	     modified:   src/system.h
+	     modified:   src/util.c
+	     modified:   tests/help-version
+
+     Untracked files:
+       (use "git add <file>..." to include in what will be committed)
+
+	     NEWS.orig
+	     README-hacking.orig
+	     README-hacking.rej
+	     README.orig
+	     README.rej
+	     cfg.mk.orig
+	     cfg.mk.rej
+	     ms/config.site.orig
+	     src/cmp.c.orig
+	     src/context.c.orig
+	     src/diff.c.orig
+	     src/diff.c.rej
+	     src/diff.h.orig
+	     src/diff3.c.orig
+	     src/diff3.c.rej
+	     src/dir.c.orig
+	     src/sdiff.c.orig
+	     src/system.h.orig
+	     src/util.c.orig
+	     tests/help-version.orig
+
+     no changes added to commit (use "git add" and/or "git commit -a")
+
+___________________________________________________________________________
+
+Step 8
+
+To learn how to use vc-diff (C-x v =) and vc-revert (C-x v u), I use the following\
+command
+	C-h k C-x v =
+This tells us that this command displays diffs between file revisions. By default,\
+it compares the currently selected fileset with its working revision
+   	C-h k C-x v u
+This tells us that this command reverts working copies of the selected fileset to \
+their repository contents.
+
+We can type in C-x v = and enter the *vc-diff* buffer. Then we can use the \
+describe-mode command to find the emacs functions we can use there.
+	      C-h m      __to open describe-mode
+	      C-M-v      __scroll down
+We notice that we ca use many command. Among those are diff-apply-hunk (C-c C-a)\
+and diff-goto-source (C-c C-c) functions. To learn how to use these:
+    	C-h k C-c C-a
+This tells us that the command can be used to apply the hunk to the current source\
+file and then go to the next.
+        C-h k C-c C-c
+This tells us that the command is used to jump to the corresponding source line.
+
+
+___________________________________________________________________
+
+Step 9
+
+To revert all changes to files that are not .c, we use emacs. First we figure out\
+which files we would like to revert using the result of: git status
+The files are
+    NEWS
+    README
+    TODO
+    doc/diagmeet.note
+    ms/config.bat
+    ms/config.site
+    po/en.po
+    src/diff.h
+    src/system.h
+    tests/help-version
+
+We then use the following command on the "file"
+      emacs <file>
+      C-x v u
+      yes
+
+For the remaining file, I used diff-apply-hunk to revert the changes other than\
+changes to character string constants
+      emacs <file>
+      C-x v =
+      //scroll to the lines where the change should be reverted
+      C-c C-a
+      y
+      //do this for all the lines in the diff that need to be reverted
+
+__________________________________________________________________________
+
+Step 10
+
+To examine the files src/*.c.rej, we first find their names:
+   find . src/*.c.rej
+
+This gives
+1) src/diff3.c.rej
+2) src/diff.c.rej
+
+Then we enter each file and read the rejects:
+     emacs src/<file>
+
+We notice that the reject include changes that are needed. \
+So we manually apply those changes to the files. I used C-s\
+to serch for the line in the file and then made the changes.
+
+____________________________________________________________________
+
+Step 11
+
+To remove all untracked files, first make a list of them by using:
+   git status
+
+This gives:
+        NEWS.orig
+	README-hacking.orig
+	README-hacking.rej
+	README.orig
+	README.rej
+	cfg.mk.orig
+	cfg.mk.rej
+	ms/config.site.orig
+	src/#diff.c.rej#
+	src/cmp.c.orig
+	src/context.c.orig
+	src/diff.c.orig
+	src/diff.c.rej
+	src/diff.h.orig
+	src/diff3.c.orig
+	src/diff3.c.rej
+	src/dir.c.orig
+	src/sdiff.c.orig
+	src/system.h.orig
+	src/util.c.orig
+	tests/help-version.orig
+
+We remove all these using rm command
+1) First copy the commands into file "list"
+2) Then use the command
+   	rm $(cat ../list)
+
+______________________________________________________________________
+
+Step 12
+
+Now git status shows:
+
+    On branch lab
+    Changes not staged for commit:
+      (use "git add <file>..." to update what will be committed)
+      (use "git checkout -- <file>..." to discard changes in working directory)
+
+	    modified:   src/cmp.c
+	    modified:   src/diff.c
+	    modified:   src/diff3.c
+	    modified:   src/dir.c
+	    modified:   src/sdiff.c
+	    modified:   src/util.c
+
+    no changes added to commit (use "git add" and/or "git commit -a")
+
+Then we put the output of git diif into quote-3.0-patch.txt
+      git diff > ../quote-3.0-patch.txt
+
+The file is about 326 lines long (cat ../quote-3.0-patch.txt | wc -l)
+
+_______________________________________________________________________
+
+Step 13
+
+Then we build the modified version as described in README-hacking
+     emacs README-hacking
+
+We use the following commands
+   ./bootstrap
+   ./configure
+   make
+   make check
+
+We observe that make check throws errors:
+     /bin/sh: /bin/sh: cannot execute binary file
+     Makefile:1309: recipe for target 'basic.log' failed
+     make[3]: *** [basic.log] Error 126
+     make[3]: Leaving directory '/w/home.26/class/classael/Preksha/diffutils/tests'
+     Makefile:1288: recipe for target 'check-TESTS' failed
+     make[2]: *** [check-TESTS] Error 2
+     make[2]: Leaving directory '/w/home.26/class/classael/Preksha/diffutils/tests'
+     Makefile:1403: recipe for target 'check-am' failed
+     make[1]: *** [check-am] Error 2
+     make[1]: Leaving directory '/w/home.26/class/classael/Preksha/diffutils/tests'
+     Makefile:1017: recipe for target 'check-recursive' failed
+     make: *** [check-recursive] Error 1
+However, these errors are also there without the changes.
+
+To check:
+1) ./src/diff . -
+      ./src/diff: cannot compare '-' to a directory
+
+2) ./src/diff --help
+     Usage: ./src/diff [OPTION]... FILES
+     Compare files line by line.
+
+       -i  --ignore-case  Ignore case differences in file contents.
+       --ignore-file-name-case  Ignore case when comparing file names.
+       --no-ignore-file-name-case  Consider case when comparing file names.
+       -E  --ignore-tab-expansion  Ignore changes due to tab expansion.
+       -b  --ignore-space-change  Ignore changes in the amount of white space.
+       -w  --ignore-all-space  Ignore all white space.
+       -B  --ignore-blank-lines  Ignore changes whose lines are all blank.
+       -I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE.
+       --strip-trailing-cr  Strip trailing carriage return on input.
+       -a  --text  Treat all files as text.
+
+       -c  -C NUM  --context[=NUM]  Output NUM (default 3) lines of copied context.
+       -u  -U NUM  --unified[=NUM]  Output NUM (default 3) lines of unified context.
+	 --label LABEL  Use LABEL instead of file name.
+	 -p  --show-c-function  Show which C function each change is in.
+	 -F RE  --show-function-line=RE  Show the most recent line matching RE.
+       -q  --brief  Output only whether files differ.
+       -e  --ed  Output an ed script.
+       --normal  Output a normal diff.
+       -n  --rcs  Output an RCS format diff.
+       -y  --side-by-side  Output in two columns.
+	 -W NUM  --width=NUM  Output at most NUM (default 130) print columns.
+	 --left-column  Output only the left column of common lines.
+	 --suppress-common-lines  Do not output common lines.
+       -D NAME  --ifdef=NAME  Output merged file to show '#ifdef NAME' diffs.
+       --GTYPE-group-format=GFMT  Similar, but format GTYPE input groups with GFMT.
+       --line-format=LFMT  Similar, but format all input lines with LFMT.
+       --LTYPE-line-format=LFMT  Similar, but format LTYPE input lines with LFMT.
+	 LTYPE is 'old', 'new', or 'unchanged'.  GTYPE is LTYPE or 'changed'.
+	 GFMT may contain:
+	   %<  lines from FILE1
+	   %>  lines from FILE2
+	   %=  lines common to FILE1 and FILE2
+	   %[-][WIDTH][.[PREC]]{doxX}LETTER  printf-style spec for LETTER
+	     LETTERs are as follows for new group, lower case for old group:
+	       F  first line number
+	       L  last line number
+	       N  number of lines = L-F+1
+	       E  F-1
+	       M  L+1
+	 LFMT may contain:
+	   %L  contents of line
+	   %l  contents of line, excluding any trailing newline
+	   %[-][WIDTH][.[PREC]]{doxX}n  printf-style spec for input line number
+	 Either GFMT or LFMT may contain:
+	   %%  %
+	   %c'C'  the single character C
+	   %c'\OOO'  the character with octal code OOO
+
+       -l  --paginate  Pass the output through 'pr' to paginate it.
+       -t  --expand-tabs  Expand tabs to spaces in output.
+       -T  --initial-tab  Make tabs line up by prepending a tab.
+       --tabsize=NUM  Tab stops are every NUM (default 8) print columns.
+       --suppress-blank-empty  Suppress space or tab before empty output lines.
+
+       -r  --recursive  Recursively compare any subdirectories found.
+       -N  --new-file  Treat absent files as empty.
+       --unidirectional-new-file  Treat absent first files as empty.
+       -s  --report-identical-files  Report when two files are the same.
+       -x PAT  --exclude=PAT  Exclude files that match PAT.
+       -X FILE  --exclude-from=FILE  Exclude files that match any pattern in FILE.
+       -S FILE  --starting-file=FILE  Start with FILE when comparing directories.
+       --from-file=FILE1  Compare FILE1 to all operands.  FILE1 can be a directory.
+       --to-file=FILE2  Compare all operands to FILE2.  FILE2 can be a directory.
+
+       --horizon-lines=NUM  Keep NUM lines of the common prefix and suffix.
+       -d  --minimal  Try hard to find a smaller set of changes.
+       --speed-large-files  Assume large files and many scattered small changes.
+
+       -v  --version  Output version info.
+       --help  Output this help.
+
+     FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE...' or 'FILE... DIR'.
+     If --from-file or --to-file is given, there are no restrictions on FILES.
+     If a FILE is '-', read standard input.
+     Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
+
+     Report bugs to: bug-diffutils@gnu.org
+     GNU diffutils home page: <http://www.gnu.org/software/diffutils/>
+     General help using GNU software: <http://www.gnu.org/gethelp/>
+
+There are no instances of grave accent (`) in either output
+
+____________________________________________________________________
+
+Step 14
+
+We then check the changes we made by comparing the source codes. We copy the\
+modified src code into diffutils-3.0-patch
+	cp -r src ../diffutils-3.0-patch
+
+We then copy the original version3.0 source code into diffutils-3.0
+   	mkdir copy
+	cd copy
+	git clone ~eggert/src/gnu/diffutils
+	cd diffutils
+   	git checkout tags/v3.0
+   	cp -r src ../../diffutils-3.0
+	cd ../..
+
+Then we compare the code:
+     	./diffutils/src/diff -pru diffutils-3.0 diffutils-3.0-patch >quote-3.0-test.txt
+
+
+_____________________________________________________________________
+
+Step 15
+
+To compare both the diff files we use the following command:
+   diff quote-3.0-patch.txt quote-3.0-test.txt
+
+We observe that most the changes are only due to difference in the naming of files. \
+The other changes are due to the difference in ordering of files in both the diffs \
+(specifically the order of diff3.c and diff.c. If the order is the same then the \
+changes are all due to difference in file naming.
+So we can say that the changes are innocuous as there are no differences in source code.
+
+______________________________________________________________________

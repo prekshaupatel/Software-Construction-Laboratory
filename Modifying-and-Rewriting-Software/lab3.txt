@@ -1,0 +1,149 @@
+LAB 3
+_____________________________________________________________________________
+
+<STEP 1>
+
+To verify, first to download:
+   wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz
+   wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz.sig
+   wget https://ftp.gnu.org/gnu/gnu-keyring.gpg
+
+
+  gpg: Signature made Wed 27 Dec 2017 10:29:05 AM PST using RSA key ID 306037D9
+  gpg: Good signature from "Pádraig Brady <P@draigBrady.com>"
+  gpg:                 aka "Pádraig Brady <pbrady@redhat.com>"
+  gpg:                 aka "Pádraig Brady <pixelbeat@gnu.org>"
+  gpg: WARNING: This key is not certified with a trusted signature!
+  gpg:          There is no indication that the signature belongs to the owner.
+  Primary key fingerprint: 6C37 DC12 121A 5006 BC1D  B804 DF6F D971 3060 37D9
+
+_____________________________________________________________________________
+
+<STEP 2>
+
+   To compile and install, create a directory to install in: mkdir lab_3
+   Then configure in the directory made, make and make install:
+      ./configure --prefix=/u/eng/class/classael/lab_3
+      make
+      make install
+
+_____________________________________________________________________________
+
+<STEP 3>
+
+   To reproduce the bug go to the directory lab_3 and run the following command
+      ./bin/ls -aA
+   This prints . and .. along with the other files and directories while it \
+   should not
+
+      The following commands on a "empty" directory, give the following outputs
+   ./bin/ls -a empty
+	    . ..
+   ./bin/ls -A empty
+
+   ./bin/ls -Aa empty
+	    . ..
+   ./bin/ls -aA empty
+	    . ..
+
+      The following commands on a directory ("hidden") with a hidden folder \
+      .new give the following outputs
+   ./bin/ls -a hidden
+	    . .. .new
+   ./bin/ls -A hidden
+	    .new
+   ./bin/ls -Aa hidden
+	    . .. .new
+   ./bin/ls -aA hidden
+	    . .. .new
+
+These show the bug.
+_____________________________________________________________________________
+
+<STEP 4>
+
+   To apply the patch:
+   create a patch file: touch patch.diff
+   copy the file content into the file and save it: emacs patch.diff
+   Then check: man patch, to understand what pnum does
+   then apply the patch:
+ 	   patch -p1 < patch.diff
+
+
+   On applying the patch, this is the output:
+	Hunk #1 FAILED at 4.
+	1 out of 1 hunk FAILED -- saving rejects to file NEWS.rej
+	patching file src/ls.c
+	Hunk #1 succeeded at 1900 (offset -3 lines).
+	patching file tests/local.mk
+	patching file tests/ls/a-option.sh
+   The output indicates that Hunk #1 failed at 4. However, all others succeeded.
+   
+_____________________________________________________________________________
+
+<STEP 5>
+
+   make
+On typing make to build the fixed version the following output is observed:
+   WARNING: 'automake-1.15' is missing on your system.
+
+To check the current version of automake:
+   automake --version
+   automake (GNU automake) 1.16.1
+This shows that the current automake version is 1.16.1
+To correct this problem, I entered the following command:
+   autoreconf -fi
+
+The output was as follows:
+   Copying file build-aux/config.rpath
+   Copying file m4/extern-inline.m4
+   Copying file m4/glibc2.m4
+   Copying file m4/intdiv0.m4
+   Copying file m4/intl.m4
+   Copying file m4/intldir.m4
+   Copying file m4/intmax.m4
+   Copying file m4/printf-posix.m4
+   Copying file m4/uintmax_t.m4
+   Copying file m4/visibility.m4
+   Copying file po/Makefile.in.in
+   Copying file po/Makevars.template
+
+Once the error is corrected for,
+I used the command make to compile the corrected version
+However, it reconfigured and compiled everything. Consequentially, I could not \
+check while files had been remade and whether it was neccessary to remake them.
+
+_____________________________________________________________________________
+
+<STEP 6>
+
+   The patch fixes the bug.
+   When we use the following command in the coreutils-8.29 directory:
+   	./src/ls -aA
+   It does not list . and .. among the other directories and files.
+   This is the patched version of ls.
+
+      The following commands on a "empty" directory, give the following outputs
+   ./src/ls -a empty
+	    . ..
+   ./src/ls -A empty
+
+   ./src/ls -Aa empty
+	    . ..
+   ./src/ls -aA empty
+	    
+
+      The following commands on a directory ("hidden") with a hidden folder \
+      .new give the following outputs
+   ./src/ls -a hidden
+   	    . .. .new
+   ./src/ls -A hidden
+	    .new
+   ./src/ls -Aa hidden
+	    . .. .new
+   ./src/ls -aA hidden
+   	    .new
+
+   These show the correction in the bug
+
+_____________________________________________________________________________

@@ -1,0 +1,202 @@
+Lab9
+
+______________________________________________________________________
+
+Question 1
+
+
+To find the disk space used to represent the working directory:
+   cd /u/cs/fac/eggert/src/gnu/emacs-CS-35L
+   du -s --block-size=M
+      509M	.
+We see that 509M is the disk space used to represent the working directory.
+
+To find the space used to represent the git repository
+   cd /u/cs/fac/eggert/src/gnu/emacs-CS-35L/.git
+   du -s --block-size=M
+      350M	.
+We see that 350M is used to represent the git repo.
+
+To find the files taking up the most space in the repository:
+   find . -type f -exec du -a {} + --block-size=M | sort -n -r | head -10
+      311M	./objects/pack/pack-24e56b1749b9320c560213d9045fa6cee42b4174.pack
+      24M	./objects/pack/pack-24e56b1749b9320c560213d9045fa6cee42b4174.idx
+      8M	./objects/info/commit-graph
+      7M	./gitk.cache
+      1M	./packed-refs
+      1M	./logs/refs/remotes/origin/scratch/tsdh-vc-list-files
+      1M	./logs/refs/remotes/origin/scratch/ns/draw-to-bitmap
+      1M	./logs/refs/remotes/origin/scratch/joaot/make-completion-at-point-function
+      1M	./logs/refs/remotes/origin/scratch/jit-lock-antiblink-cleaned-up
+      1M	./logs/refs/remotes/origin/scratch/fido-mode
+
+We observe that ./objects/pack/pack-24e56b1749b9320c560213d9045fa6cee42b4174.pack is \
+taking most of the space. This is because the packfile consist of several objects \
+saved in a packfile to reduce the space taken by the smaller files. This also makes\
+it more efficient.
+
+________________________________________________________________________
+
+Question 2
+
+
+To find the number of local branches:
+   git branch | wc -l
+        176
+We observe that 176 branches are local
+
+To find the number of branches that are remote:
+   git branch -r | wc -l
+        177
+We observe that 177 branches are remote
+
+_______________________________________________________________________
+
+Question 3
+
+
+To find the number of remote repositories
+   git remote | wc -l
+        1
+We see that there is 1 remote repository
+
+To find where the remote repository is
+   git remote -v
+        origin	https://git.savannah.gnu.org/git/emacs.git (fetch)
+    	origin	https://git.savannah.gnu.org/git/emacs.git (push)
+We notice that it is at https://git.savannah.gnu.org/git/emacs.git
+
+_______________________________________________________________________
+
+Question 4
+
+The ten local branches recently commited to are:
+    git branch --sort=-committerdate | head -10
+	  * master
+	    scratch/joaot/make-completion-at-point-function
+	    feature/windows-with-utils
+	    scratch/completion-api
+	    scratch/a-modest-completion-redesign-proposal
+	    scratch/fido-mode
+	    feature/gnus-select2
+	    feature/extend_face_id
+	    scratch/jit-lock-antiblink-cleaned-up
+	    emacs-26
+
+_______________________________________________________________________
+
+Question 5
+
+To find the number of commits in the master branch:
+   git rev-list master | wc -l
+        139583
+There are 139583 commits in the master branch
+
+________________________________________________________________________
+
+Question 6
+
+To find the number of total commits:
+   git rev-list --all | wc -l
+        143910
+
+To find the percent of commits in the master branch:
+   139583/143910 = 0.9699
+   96.99%
+________________________________________________________________________
+
+Question 7
+
+To find the authors of the most master branch commits after or in 2013:
+   git rev-list --after='01-01-2013 00:00' --pretty="commits by "%an master |\
+   grep '^commits by ' | sort | uniq -c | sort -nr | head -10
+        3691 commits by Eli Zaretskii
+	3647 commits by Glenn Morris
+	3605 commits by Paul Eggert
+	1806 commits by Lars Ingebrigtsen
+	1784 commits by Stefan Monnier
+	1571 commits by Michael Albinus
+	 619 commits by Dmitry Gutov
+	 576 commits by Noam Postavsky
+	 471 commits by Alan Mackenzie
+	 469 commits by Juri Linkov
+
+__________________________________________________________________________
+
+Question 8
+
+To observe the map:
+   ssh -Y classael@lnxsrv09.seas.ucla.edu
+   cd /u/cs/fac/eggert/src/gnu/emacs-CS-35L
+   gitk
+
+The commits and there positions in the map are:
+
+9100    4ea37c2b8b0c5a68fde59770c3536195e0972217
+9099	977cd6cb28a37744966ec62f70cf62659f6f302a
+9080	625cee531623feddbe3174fad52c7db96ec60bb3
+9077	5490ccc5ebf39759dfd084bbd31f464701a3e775
+9074	0c06b93c1e467debd401eb0b3be4652fde14fa95
+9020	820739bbb572b30b6ce45756c9960e48dca859af
+9019	00e4e3e9d273a193620c3a4bb4914e555cb8e343
+9012	49cd561dc62ea6b3fbedab7aef0f020733f4cf09
+9011	abcb2e62dae6aa26308f7ac9efc89247f89cbe65
+8990	98ac36efe4ce4bd3a0bca76fc73ce6c7abaa4371
+
+
+Relation map:
+
+98ac36efe4ce4bd3a0bca76fc73ce6c7abaa4371
+	|                             |
+	.                             |_______________________ 
+	.                                                     |
+	.                                                     |
+	|                                                     .
+abcb2e62dae6aa26308f7ac9efc89247f89cbe65                      .
+	|              |__________________________            .
+      	|                                         |           |
+	|                                       49cd561dc62ea6b3fbedab7aef0f020733f4cf09
+	|                                                     |
+        |                                                     .
+	|     	      	      	      	                      .
+	|     	      	      	      	                      .
+        |                                              _______|
+	|                                             |
+	|                                    00e4e3e9d273a193620c3a4bb4914e555cb8e343
+	|                                      _______|
+	|                                     |
+        |                               820739bbb572b30b6ce45756c9960e48dca859af
+	.                                     |
+	.     	      	                      .
+	.     	      	                      .
+	|     	      	                      .
+0c06b93c1e467debd401eb0b3be4652fde14fa95      |
+        |       |_____________________________|
+	|                                 |
+        |       	      	          .
+	|        		          .
+	|          		          .
+	|          		          |
+	|                   5490ccc5ebf39759dfd084bbd31f464701a3e775
+	|	                              	  |
+	|		                          .
+	.		                          .
+	.		                          .
+	.		                          |
+	|                            625cee531623feddbe3174fad52c7db96ec60bb3
+	|	            	                         |
+977cd6cb28a37744966ec62f70cf62659f6f302a                 |
+	|________________________________________________|
+				|
+	    4ea37c2b8b0c5a68fde59770c3536195e0972217
+
+
+We notice that the branch 4ea37c2b8b0c5a68fde59770c3536195e0972217 \
+(the earliest commit from the given set of commits) branched into 2 other\
+branches: Branch A (977cd6cb28a37744966ec62f70cf62659f6f302a) and Branch B \
+(625cee531623feddbe3174fad52c7db96ec60bb3). Both of these branches had more commits.\
+then branch B was merged into Branch A. However, there were more commits made to both the \
+branches and Branch B was again merged into branch A (abcb2e62dae6aa26308f7ac9efc89247f89cbe65).\
+After more commits in both the branches, Branch B was again merged into branch A \
+(98ac36efe4ce4bd3a0bca76fc73ce6c7abaa4371). This is the topmost commit from our list of commits.
+

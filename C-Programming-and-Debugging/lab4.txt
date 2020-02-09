@@ -1,0 +1,187 @@
+
+________________________________________________________________________
+
+STEP 1
+
+To build the version of coreutils as-is, download the files.
+
+   wget https://web.cs.ucla.edu/classes/fall19/cs35L/assign/coreutils-with-bug.tar.gz
+
+Then untar, configure, and make the file
+
+    tar -xvzf coreutils-with-bug.tar.gz
+    cd coreutils-with-bug
+    ./configure --prefix=/u/eng/class/classael/lab_4
+    make
+
+However when we try to make the file, the following compilation error is observed:
+ERROR:
+     utimens.h:2:5: error: conflicting types for 'futimens'
+	 2 | int futimens (int, char const *, struct timespec const [2]);
+	   |     ^~~~~~~~
+     In file included from utimecmp.h:25,
+		      from utimecmp.c:25:
+     /usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+       373 | extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+	   |            ^~~~~~~~
+
+REASON FOR ERROR:
+The error occurs since some of the functions, like futimens, have been defined\
+more than once. The patch file renames one of the futimens to coreutils_futimens.\
+This removes the error, since the function is now defined once only. The patch \
+does the same thing with the function tee which had the same problem.
+
+________________________________________________________________________
+
+STEP 2
+
+To solve the reason for the error, we can apply a patch file. To apply the patch:
+
+   cd coreutils-with-bug
+   wget https://web.cs.ucla.edu/classes/fall19/cs35L/assign/coreutils.diff
+   patch -p0 < coreutils.diff
+
+On patching we get the following output, indicating that the patch was successfully applied.
+OUTPUT:
+      patching file lib/utimens.c
+      patching file lib/utimens.h
+      patching file src/copy.c
+      patching file src/tee.c
+      patching file src/touch.c
+
+Then we can continue with the rest of the steps to reproduce the bug
+     ./configure --prefix=/u/eng/class/classael/lab_4
+     make
+     make install
+
+________________________________________________________________________
+
+STEP 3
+
+To reproduce the bug we go to the directory where we installed the bug and follow the steps given:
+   cd ../lab_4
+
+   tmp=$(mktemp -d)
+   cd $tmp
+   touch -d '1918-11-11 11:00 GMT' wwi-armistice-cs35L
+   touch now
+   sleep 1
+   touch now1
+   TZ=UTC0 ~/lab_4/bin/ls -lt --full-time wwi-armistice-cs35L now now1
+
+This gives the expected outcome with error.
+The system shows that the file in 1918 is more recent than the one in 2019.
+OUTPUT:
+       -rw-r--r-- 1 classael class 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice-cs35L
+       -rw-r--r-- 1 classael class 0 2019-10-26 22:11:40.810075158 +0000 now1
+       -rw-r--r-- 1 classael class 0 2019-10-26 22:11:30.334893034 +0000 now
+
+   cd
+   rm -fr $tmp
+
+____________________________________________________________________
+
+STEP 4
+
+To find the problem in the code that is resulting in this error, we use gdb
+
+   gdb ./bin/ls
+   run /tmp/tmp.gRVGJi4RkD -lt /tmp/tmp.gRVGJi4RkD/now /tmp/tmp.gRVGJi4RkD/now1 /tmp/tmp.gRVGJi4RkD/wwi-armistice-cs35L
+
+
+To look at the list of functions:
+   info functions
+
+This gives a list of functions in the program. Since the problem is associated with time,\
+we set a breakpoint at those functions which might possibly be comparing the time.
+   break compare_atime
+   break compare_ctime
+   break compare_mtime
+
+___________________________________________________________________________
+
+STEP 5
+
+Then we run the program. The program stops at the breakpoint for "compare_mtime". We step into the function\
+and realize that it calls "cmp_mtime" which then calls "timespec_cmp". To see what this function does we use\
+the command: list. This shows us the function:
+      int diff = a.tv_sec - b.tv_sec;
+      return diff ? diff : a.tv_nsec - b.tv_nsec;
+
+The function returns an int which is shorter than the number of bytes needed to store the difference. Since\
+100 years would have a difference of a lot of seconds, near 3.1*10^9, while an int can only store a maximum\
+of about 2.1*10^9. Hence the difference will overflow and result in undesired behavior. To solve this we can\
+return a positive int, zero or a negative int when the first argument is greater than, equal, or lesser than \
+the second argument.
+
+____________________________________________________________________________
+
+STEP 6
+
+To correct this error we need to file out the name of the file. We can see this when we list.
+   timespec_cmp (b=..., a=...) at ../lib/timespec.h:49
+
+We can then create a copy of the file, and make the desired changes to the file.
+   cd ~/coreutils-with-bug/lib
+   cp timespec.h timespec_n.h
+   emacs timespec_n.h
+
+The desired change is to change the code in "timespec_cmp" to prevent overflow.
+So we change the code to the following:
+
+  if (a.tv_sec != b.tv_sec)  
+    {
+      return a.tv_sec > b.tv_sec ? 1 : -1;      
+    }
+  else if (a.tv_nsec != b.tv_nsec)              
+    {
+      return a.tv_nsec > b.tv_nsec ? 1 : -1;    
+    }
+  return 0;
+
+Once we make the changes, we create a diff file
+   cd ..
+   diff -u lib/timespec.h lib/timespec_n.h >> lab4.diff
+
+__________________________________________________________________________
+
+STEP 7
+
+To add a change log to the diff file use emacs to edit the diff file.
+
+2019-10-28  Preksha Uttamkumar Patel  <classael@lnxsrv09.seas.ucla.edu>
+
+	    * timespec_n.h (timespec_cmp):  timespec_cmp was modified to return
+	    -1,0,1 instead of the difference between the two times in seconds.
+	    The difference resulted in an overflow which led to unexpected results
+
+
+Once we are done, we can patch the file with the diff file and make it.
+This way we can check if it corrected the bug.
+
+   patch -p0 < lab4.diff
+   make
+
+The bug is no longer there.
+
+------------------------------------------------------------------------
+
+STEP 8
+
+Reproducing the bug in SEASnet Linux servers
+When we try to reproduce the bug in SEASnet Linux servers, we see the following output:
+
+~/lab_4/bin/ls -lt --full-time wwi-armistice-cs35L now now1
+-rw-r--r-- 1 classael class 0 2054-12-17 09:28:16.000000000 -0800 wwi-armistice-cs35L
+-rw-r--r-- 1 classael class 0 2019-10-26 19:45:58.333711000 -0700 now1
+-rw-r--r-- 1 classael class 0 2019-10-26 19:45:42.964626000 -0700 now
+
+Not only is the output ordered wrong, but the date for wwi-armistice-cs35L has also been modified to\
+a date in the future. The SEASnet Linux server does not do well.  
+
+This is because time is represented as seconds since Unix Epoch (1 January 1970) on the Linux machine.\
+As a result any date before that would be negative. Since the SEASnet NFS filesystem has an\
+unsigned 32 bit time stamp, this casts the negative to a positive and results in undesired behavior.
+
+This problem can be solved if files are touch on the local filesystem (df -l) since the local \
+file system on Linux server has signed 32-bit timestamps. 

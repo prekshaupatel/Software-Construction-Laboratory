@@ -1,0 +1,90 @@
+dir=$1
+declare -a b_name
+declare -a g_name
+r=false
+
+
+if [ "$1" == "-r" ]
+then
+	r=true
+	if [ "$2" == "" ]
+	then
+		dir="./"
+	elif [ "$3" == "" ]
+	then
+		dir=$2
+	else
+		>&2 echo "ERROR: Please pass atmost one option argument with \
+one directory argument only."
+                exit 1
+	fi
+else
+	if [ "$1" == "" ]
+	then
+		dir="./"
+	elif [ "$2" != "" ]
+	then
+		>&2 echo "ERROR: Please pass one argument only."
+        	exit 2
+	fi
+fi
+
+
+if [[ (! -d $dir) || (-L $dir) ]]
+then
+	>&2 echo "ERROR: Please enter directory name"
+	exit 1
+elif [ "${dir:0:1}" == "-" ]
+then
+	>&2 echo "ERROR: Argument cannot begin with -"
+        exit 3
+elif [ ${dir: -1} != "/" ]
+then
+	dir="$dir/"
+fi
+
+if [ ! -r $dir ]
+then
+	>&2 echo "ERROR: Cannot read $dir"
+	exit 0
+fi
+
+IFS=$'\n'
+b_names=$(find $dir -mindepth 1 -maxdepth 1 -exec basename '{}' \; |\
+grep -E "^.{15,}$|[^A-Za-z\.\_\-]|^\.\..|^\.[^\.]|^[-].*")
+
+b_names=("${b_names[@]}" "$(find $dir -mindepth 1 -maxdepth 1 -exec \
+basename '{}' \; |\
+ grep -v -E "^.{15,}$|[^A-Za-z\.\_\-]|^\.\..|^\.[^\.]|^[-].*" |\
+ sort -f | uniq -iD )" )
+
+if ( $r )
+then
+	g_names=$(find $dir -mindepth 1 -maxdepth 1 -exec basename '{}' \; | grep\
+	-v -E "^.{15,}$|[^A-Za-z\.\_\-]|^\.|^[-].*" | sort -f | uniq -iu )
+       	for ELEMENT in ${g_names[@]}
+	do
+		if [[ (-d $dir$ELEMENT) && (! -L $dir$ELEMENT) ]]
+		then
+			./poornames -r "$dir$ELEMENT/"
+		fi
+	done
+fi
+
+
+
+for ELEMENT in ${b_names[@]}
+do
+	if [[ (-d $dir$ELEMENT) && (! -L $dir$ELEMENT) ]]
+	then
+		echo "$dir$ELEMENT/"
+		if ( $r )
+		then
+			./poornames -r "$dir$ELEMENT/"
+		fi
+
+	else
+		echo "$dir$ELEMENT"
+	fi
+done
+

@@ -1,0 +1,132 @@
+HW 3
+_________________________________________________________________________
+
+<QUESTION 1>
+
+The patch improves the performance of ls
+After applying the patch the tests of ls on an empty file and hidden files in \
+directories both work accurately. This indicates an improved performance. The\
+patch makes the ls work as expected by the user.
+
+BEFORE THE PATCH:
+
+      The following commands on a "empty" directory, give the following outputs
+   ./bin/ls -a empty
+            . ..
+   ./bin/ls -A empty
+
+   ./bin/ls -Aa empty
+            . ..
+   ./bin/ls -aA empty
+            . ..
+
+      The following commands on a directory ("hidden") with a hidden folder \
+      .new give the following outputs
+   ./bin/ls -a hidden
+            . .. .new
+   ./bin/ls -A hidden
+            .new
+   ./bin/ls -Aa hidden
+            . .. .new
+   ./bin/ls -aA hidden
+            . .. .new
+
+AFTER THE PATCH:
+   When we use the following command in the coreutils-8.29 directory:
+        ./src/ls -aA
+   It does not list . and .. among the other directories and files.
+   This is the patched version of ls.
+
+      The following commands on a "empty" directory, give the following outputs
+   ./src/ls -a empty
+            . ..
+   ./src/ls -A empty
+
+   ./src/ls -Aa empty
+            . ..
+   ./src/ls -aA empty
+
+
+      The following commands on a directory ("hidden") with a hidden folder \
+      .new give the following outputs
+   ./src/ls -a hidden
+            . .. .new
+   ./src/ls -A hidden
+            .new
+   ./src/ls -Aa hidden
+            . .. .new
+   ./src/ls -aA hidden
+            .new
+
+
+_________________________________________________________________________
+
+<QUESTION 2>
+
+There might be some other issues that have not been observed yet.
+The new version of Coreutils might introduce problems since there might be \
+other programs relying on the working of the previous version of Coreutils. \
+That is the expected output of ls -aA would have included . and .. and the \
+working of the program was based on it. However, since the new version \
+corrects that, it might result in other problems. Hence all programs\
+implementing ls -aA would have to be check for potentially strange \
+behaviors.
+
+_________________________________________________________________________
+
+<QUESTION 3>
+
+When the script is evoked on an empty file by the command:
+       python randline.py /dev/null
+       
+The following output is observed:
+       Traceback (most recent call last):
+	 File "randline.py", line 70, in <module>
+	   main()
+	 File "randline.py", line 64, in main
+	   sys.stdout.write(generator.chooseline())
+	 File "randline.py", line 34, in chooseline
+	   return random.choice(self.lines)
+	 File "/usr/local/cs/Python-2.7.16/lib/python2.7/random.py", line 277, \
+	 in choice
+	   return seq[int(self.random() * len(seq))]  # raises IndexError if \
+	   seq is empty
+       IndexError: list index out of range
+
+The output can be explain since there are no lines in the file for the \
+script to choose from and return, so the index is out of range random throws\
+an error
+
+________________________________________________________________________
+
+<QUESTION 4>
+
+When the script is evoked with python3 instead of python2:
+       python3 randline.py /dev/null
+
+It results on Sytax errors since they are syntax differences between python2 \
+and python3:
+       File "randline.py", line 65
+        	 except IOError as (errno, strerror):
+                                   ^
+    SyntaxError: invalid syntax
+
+In Python3 the syntax is
+   except IOError as e:
+   	  parser.error("I/O error({0}): {1}".
+                     format(e.errno, e.strerror))
+While in Python2 it was
+      except IOError as (errno, strerror):
+          parser.error("I/O error({0}): {1}".
+                    format(errno, strerror))
+These syntax changes result in an error being thrown.
+
+________________________________________________________________________
+
+<QUESTION 5>
+
+When I call shuf.py with python instead of python3 it works perfectly fine. \
+All the options I tested worked fine. This indicates that the code in the \
+file is compatible with both python2 and python3. Since the code is \
+compatible with both versions of python it can be the script can be called \
+with either of the options.

@@ -1,0 +1,108 @@
+Lab 2.0
+
+1) tr -c 'A-Za-z' '[\n*]'
+
+This command seperates each string of alphabets by newline.
+
+
+2) tr -cs 'A-Za-z' '[\n*]'
+
+This command seperates each string of alphabets by newline.
+It also removes all empty lines.
+ 
+
+3) tr -cs 'A-Za-z' '[\n*]' | sort
+
+This command sorts the results of the above command in order.
+
+
+4) tr -cs 'A-Za-z' '[\n*]' | sort -u 
+
+This commands sorts the results of the input uniquely.
+That is all repetitions are removed.
+
+ 
+
+5) tr -cs 'A-Za-z' '[\n*]' | sort -u | comm - words
+
+comm prints 3 rows: 1st row is unique to file1 (i.e. assign2.html),
+2nd row is unique to file2 (words), 3rd row is common to both files.
+ 
+
+6) tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words # ENGLISHCHECKER
+
+
+This command only prints (1st row) what is unique to input file (assign2.html).
+Accordingly it list all words not in words (list of english words). 
+ 
+
+
+Give a step-by-step explanation of how you created the Hawaiian dictionary.
+
+To create the hawaiian dictionary I did the following
+(corresponding commands are in {}):
+
+1) globally removed all instances of "<u>", "</u>" and "?"
+   {sed 's/<u>//g' | sed 's/<\/u>//g' | sed 's/?//g'}
+2) replaced ` with '      {sed "s/\`/\'/g"}
+3) changed uppercase to lowercase   {tr '[:upper:]' '[:lower:]'}
+4) selected lines starting with as many spaces, followed by "<td",
+   followed by any non > characters, then a ">", followed by a string with
+   spaces and hawaiian characters, then "</td>, ending in as many trailing 
+   spaces     
+   {grep "^[ ]*<td[^\>]*>[ pkmnwlhaeiou']*<\/td>[ ]*$"}
+5) removed the tags in front and after the string along with the extra 
+   spaces on either ends   
+   {sed 's/^[ ]*<td[^\>]*>//' | sed 's/<\/td>[ ]*$//'} 
+6) replaced all spaces with newlines    {tr ' ' '\n'}
+7) sort the list uniquely   {sort -u}
+
+Running these command build a dictionary of 300 hawaiian words.
+
+Hawaiian checker:
+The hawaiian check checks for strings with alphabets and apostrophe
+tr '[:upper:]' '[:lower:]' | tr -cs "A-Za-z\'" '[\n*]' | sort -u | \
+comm -23 - hdictionary
+
+Where hdictionary is the hawaiian dictionary
+
+
+#######################################################################
+
+NOTE: the "words" file was made lowercase and 
+ENGLISHCHECKER made a case insensitive match for words
+NOTE: The version of the web page is v 1.42 2019/10/09 18:58:21 
+The version is after that of the one mentioned in the piazzo note.
+However a newer version is available but has not been used for this program.
+
+#######################################################################
+
+
+
+Distinct misspelled words using  ENGLISHCHECKER: 37 words
+#The commands used are:
+cat assign2.html | tr '[:upper:]' '[:lower:]' |tr -cs 'A-Za-z' '[\n*]' |  \
+sort -u | comm -23 - words
+
+
+Distinct misspelled words using HAWAIIANCHECKER: 553 words
+#The command used was:
+cat assign2.html | tr '[:upper:]' '[:lower:]' | tr -cs "A-Za-z'" '[\n*]' | \
+sort -u | comm -23 - hdictionary
+
+
+Number of distinct words that ENGLISHCHECKER reports as misspelled 
+but HAWAIIANCHECKER does not: 1 words
+
+Examples: wiki
+# The command used was 
+cat assign2.html | tr '[:upper:]' '[:lower:]' | tr -cs "A-Za-z" '[\n*]' | \
+sort -u | comm -23 - words | comm -12 - hdictionary
+
+Number of distinct words that HAWAIIANCHECKER reports as misspelled 
+but ENGLISHCHECKER does not: 501 words
+
+Examples: zero, word
+#The command used was:
+cat assign2.html | tr '[:upper:]' '[:lower:]' | tr -cs "A-Za-z'" '[\n*]' | \
+sort -u | comm -23 - hdictionary | comm -12 - words

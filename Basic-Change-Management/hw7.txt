@@ -1,0 +1,150 @@
+
+________________________________________________________________________
+
+Step 2
+
+To checkout version3.0 from repository
+   git checkout tags/v3.0 -b quote
+
+_____________________________________________________________________
+
+Step 3
+
+To apply the patch quote-3.0-patch.txt
+   patch -p1 < ../quote-3.0-patch.txt
+
+____________________________________________________________________
+
+Step 4
+
+To understand the add-change-log-entry-other-window command, \
+look up the following on emacs
+     C-h k C-x 4 a
+
+This tells us that it can be used to find change log file window\
+and add entry and item.
+We can also read the manual for the command to understand it in\
+detail.
+
+_____________________________________________________________________
+
+Step 5
+
+We look up the changelog in the original patch from git-log.txt
+
+    This is in response to a recent change in the GNU coding standards,
+    which now suggest quoting 'like this' or "like this", instead of
+    `like this' or ``like this''.
+    Quote 'like this' in output.
+
+To compose an appropriate ChangeLog entry use the following commands:
+   emacs
+   C-x 4 a
+
+Then we can type in the change
+
+_____________________________________________________________________
+
+Step 6
+
+To commit the changes using the ChangeLog entry as the message
+First we stage them
+      git add .
+
+Then we commit with the -F flag to add message from the file\
+ChangeLog
+	git commit -F ChangeLog
+	
+This is the output of the command:
+	[quote c0f3871] 2019-11-15  Preksha Uttamkumar Patel  <classael@lnxsrv05.seas.ucla.edu>
+ 	6 files changed, 43 insertions(+), 43 deletions(-)
+
+______________________________________________________________________
+
+Step 7
+
+To create the patch:
+    git format-patch -1 --stdout > formatted-patch.txt
+
+This is the final patch
+
+________________________________________________________________________
+
+Step 8
+
+Partner's name: AURORA YEH
+Partner's UID: 305110110
+
+to verify the patch, we first checkout another branch for version 3.0
+   git checkout tags/v3.0 -b partner
+
+Then we apply their patch
+     git am < ../formatted-patch.txt
+The output is:
+     Applying: 2019-11-16 Aurora Beverley Yeh <aurora@lnxsrv07.seas.ucla.edu>
+
+We build and check by the following commands:
+   make
+   make check
+
+Make check gives some errors, however, they were there even previously
+
+To check if it works
+   ./src/diff . -
+   ./src/diff --help
+
+The outputs of both do not contain `
+
+To check the changelog
+   make distdir
+   emacs diffutils*/ChangeLog
+
+The changelog has been added
+
+_____________________________________________________________________
+
+Step 9
+
+To verify that the change log entry works
+   make distdir
+
+then we see that in
+     emacs diffutils*/ChangeLog
+
+The changeLog has been added
+
+________________________________________________________________________
+
+
+Step 10
+In a terminal for XQuartz
+First we ssh into a server with X11 enabled
+      ssh -Y classael@lnxsrv09.seas.ucla.edu
+
+then we go to the directory ~eggert/src/gnu/emacs
+     cd ~eggert/src/gnu/emacs
+     export PATH=/usr/local/cs/bin:$PATH
+     gitk --all
+
+The last merge that is no newer than 2015-01-25 is
+    Merge branch 'master' into xwidget
+    Committer: Joakim Verona <joakim@verona.se>  2015-01-25 12:19:27
+
+The merge point can be viewed as the point where two lines merge into one on the
+topmost window on the left.
+
+The top left window is a list of all the commit along with the branching shown graphically.
+
+The top middle window is a list of all the people who made the commits and changes.
+
+The top right window is a list of the times at which the commit was made.
+
+The middle portion has a option to search for commits.
+
+The bottom left window gives a list of changes made in the commit (in the form of a \
+diff file. It also give a short description which includes: Author, Committer,\
+Parent, Child, Branches, Follows, Precedes.
+
+The bottom right window shows the comments. We can see the comments for the patch or the \
+tree.
+___________________________________________________________________________
